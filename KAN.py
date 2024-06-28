@@ -3,6 +3,7 @@ import pandas as pd
 import time
 from sklearn.model_selection import train_test_split
 from kan import *
+import scipy.io
 
 # ------------------------------------------------------------------------------------------------------------------
 # Ucitavanje i prikaz obelezja
@@ -22,7 +23,8 @@ negative_all = np.array(negative_all)
 N = negative_all.shape[1]
 
 if negative_all.shape[0] > 3:
-    ind_ob = [1, 6, 15]     # 2, 7, 16
+    # ind_ob = [1, 6, 15]     
+    ind_ob = [1, 3, 15]
 else:
     ind_ob = [0, 1, 2]
 
@@ -47,19 +49,19 @@ def sample_data(data, percentage=0.05):
 negative_sampled = sample_data(negative_obelezja)
 positive_sampled = sample_data(positive_obelezja)
 
-# Plot feature distribution in 3D
-fig = plt.figure()
-ax = fig.add_subplot(111, projection='3d')
-# ax.scatter(negative_obelezja[0, :], negative_obelezja[1, :], negative_obelezja[2, :], c='b', marker='.', label='Bez pukotine')
-# ax.scatter(positive_obelezja[0, :], positive_obelezja[1, :], positive_obelezja[2, :], c='r', marker='.', label='Sa pukotinom')
-ax.scatter(negative_sampled[0, :], negative_sampled[1, :], negative_sampled[2, :], c='b', marker='.', label='Bez pukotine')
-ax.scatter(positive_sampled[0, :], positive_sampled[1, :], positive_sampled[2, :], c='r', marker='.', label='Sa pukotinom')
-ax.set_xlabel(f'Obelezje {ind_ob[0] + 1}')
-ax.set_ylabel(f'Obelezje {ind_ob[1] + 1}')
-ax.set_zlabel(f'Obelezje {ind_ob[2] + 1}')
-ax.set_title('Prikaz obelezja u prostoru')
-ax.legend()
-plt.show()
+# # Plot feature distribution in 3D
+# fig = plt.figure()
+# ax = fig.add_subplot(111, projection='3d')
+# # ax.scatter(negative_obelezja[0, :], negative_obelezja[1, :], negative_obelezja[2, :], c='b', marker='.', label='Bez pukotine')
+# # ax.scatter(positive_obelezja[0, :], positive_obelezja[1, :], positive_obelezja[2, :], c='r', marker='.', label='Sa pukotinom')
+# ax.scatter(negative_sampled[0, :], negative_sampled[1, :], negative_sampled[2, :], c='b', marker='.', label='Bez pukotine')
+# ax.scatter(positive_sampled[0, :], positive_sampled[1, :], positive_sampled[2, :], c='r', marker='.', label='Sa pukotinom')
+# ax.set_xlabel(f'Obelezje {ind_ob[0] + 1}')
+# ax.set_ylabel(f'Obelezje {ind_ob[1] + 1}')
+# ax.set_zlabel(f'Obelezje {ind_ob[2] + 1}')
+# ax.set_title('Prikaz obelezja u prostoru')
+# ax.legend()
+# plt.show()
 
 # ------------------------------------------------------------------------------------------------------------------
 # Train/test split
@@ -77,9 +79,11 @@ neg_test = neg_test.T
 # ------------------------------------------------------------------------------------------------------------------
 # Dataset creation
 X_train = np.concatenate((pos_train, neg_train), axis = 1).T
+np.savetxt('X_train.csv', X_train, delimiter=',')
 Y_train = np.concatenate((np.zeros(N_train), np.ones(N_train)))
 
 X_test = np.concatenate((pos_test, neg_test), axis = 1).T
+np.savetxt('X_test.csv', X_test, delimiter=',')
 Y_test = np.concatenate((np.zeros(N_test), np.ones(N_test)))
 
 dataset = {}
@@ -138,7 +142,7 @@ xGrid = np.c_[x.ravel(), y.ravel(), z.ravel()]
 xGrid = torch.from_numpy(xGrid)
 
 probs = model(xGrid)
-f = probs[:, 1].reshape(x.shape)
-f = f.detach().numpy()
-f_2d = f.reshape(-1, f.shape[-1])
-np.savetxt('probs.csv', f_2d, delimiter=',')
+probs = probs.detach().numpy()
+f = np.argmax(probs, axis = 1)
+f = f.reshape(x.shape)
+scipy.io.savemat('probs.mat', {'f': f})
