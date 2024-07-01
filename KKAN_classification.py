@@ -16,6 +16,7 @@ import torchvision.transforms as transforms
 from torch.utils.data import DataLoader
 
 from KKAN import KKAN
+from ConvNet import ConvNet
 
 # Custom dataset class
 class ImageDataset(Dataset):
@@ -224,6 +225,17 @@ def train_and_test_models(model, device, train_loader, test_loader, optimizer, c
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+model_ConvNet = ConvNet()
+model_ConvNet.to(device)
+optimizer_ConvNet = optim.AdamW(model_ConvNet.parameters(), lr=1e-3, weight_decay=1e-4)
+scheduler_ConvNet = optim.lr_scheduler.ExponentialLR(optimizer_ConvNet, gamma=0.8)
+criterion_ConvNet = nn.CrossEntropyLoss()
+all_train_loss_ConvNet, all_test_loss_ConvNet, \
+    all_test_accuracy_ConvNet, all_test_precision_ConvNet, \
+    all_test_recall_ConvNet, all_test_f1_ConvNet = \
+    train_and_test_models(model_ConvNet, device, train_loader, test_loader,
+                           optimizer_ConvNet, criterion_ConvNet, epochs=1, scheduler=scheduler_ConvNet)
+
 model_KKAN = KKAN(device = device)
 model_KKAN.to(device)
 optimizer_KKAN = optim.AdamW(model_KKAN.parameters(), lr=1e-3, weight_decay=1e-4)
@@ -233,4 +245,64 @@ all_train_loss_KKAN, all_test_loss_KKAN, \
     all_test_accuracy_KKAN, all_test_precision_KKAN, \
         all_test_recall_KKAN, all_test_f1_KKAN = \
             train_and_test_models(model_KKAN, device, train_loader, test_loader, 
-                                  optimizer_KKAN, criterion_KKAN, epochs=10, scheduler=scheduler_KKAN)
+                                  optimizer_KKAN, criterion_KKAN, epochs=1, scheduler=scheduler_KKAN)
+
+def count_parameters(model):
+    return sum(p.numel() for p in model.parameters() if p.requires_grad)
+
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 5))  
+
+ax1.plot(all_test_loss_ConvNet, label='Loss ConvNet', color='purple')
+ax1.plot(all_test_loss_KKAN, label='Loss KKAN', color='orange')
+
+ax1.set_title('Loss Test vs Epochs')
+ax1.set_xlabel('Epochs')
+ax1.set_ylabel('Loss')
+ax1.legend()
+ax1.grid(True)
+
+ax2.scatter(count_parameters(model_ConvNet), max(all_test_accuracy_ConvNet), color='purple', label='ConvNet')
+ax2.scatter(count_parameters(model_KKAN), max(all_test_accuracy_KKAN), color='orange', label='KKAN')
+
+ax2.set_title('Number of Parameters vs Accuracy')
+ax2.set_xlabel('Number of Parameters')
+ax2.set_ylabel('Accuracy (%)')
+ax2.legend() 
+ax2.grid(True)
+
+plt.tight_layout()
+plt.show()
+
+
+def highlight_max(s):
+    is_max = s == s.max()
+    return ['font-weight: bold' if v else '' for v in is_max]
+
+accs = []
+precision = []
+recall = []
+f1s = []
+params_counts = []
+
+models = [model_ConvNet, model_KKAN]
+
+# Data extraction from models
+for i, m in enumerate(models):
+    index = np.argmax(m.all_test_accuracy)
+    params_counts.append(count_parameters(m))
+    accs.append(m.all_test_accuracy[index])
+    precision.append(m.all_test_precision[index])
+    recall.append(m.all_test_recall[index])
+    f1s.append(m.all_test_f1[index])
+
+# DataFrame creation
+df = pd.DataFrame({
+    "Test Accuracy": accs,
+    "Test Precision": precision,
+    "Test Recall": recall,
+    "Test F1 Score": f1s,
+    "Number of Parameters": params_counts
+}, index=[ "ConvNet", "KKAN"])
+
+df.to_csv('surface_cracks.csv', index=False)
+df_styled = df.style.apply(highlight_max, subset=df.columns[:], axis=0).format('{:.3f}')
