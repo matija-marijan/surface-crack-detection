@@ -1,4 +1,4 @@
-Data/
+Data for MATLAB/
 Dataset/
 Dokumenta/
 Izvestaj/Junk
@@ -15,3 +15,5 @@ GA_save.mat
 SVM_save.mat
 uporedna_analiza.mat
 junk.py
+__pycache__
+Results/

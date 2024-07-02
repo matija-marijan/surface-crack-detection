@@ -234,7 +234,7 @@ all_train_loss_ConvNet, all_test_loss_ConvNet, \
     all_test_accuracy_ConvNet, all_test_precision_ConvNet, \
     all_test_recall_ConvNet, all_test_f1_ConvNet = \
     train_and_test_models(model_ConvNet, device, train_loader, test_loader,
-                           optimizer_ConvNet, criterion_ConvNet, epochs=1, scheduler=scheduler_ConvNet)
+                           optimizer_ConvNet, criterion_ConvNet, epochs=5, scheduler=scheduler_ConvNet)
 
 model_KKAN = KKAN(device = device)
 model_KKAN.to(device)
@@ -245,7 +245,7 @@ all_train_loss_KKAN, all_test_loss_KKAN, \
     all_test_accuracy_KKAN, all_test_precision_KKAN, \
         all_test_recall_KKAN, all_test_f1_KKAN = \
             train_and_test_models(model_KKAN, device, train_loader, test_loader, 
-                                  optimizer_KKAN, criterion_KKAN, epochs=1, scheduler=scheduler_KKAN)
+                                  optimizer_KKAN, criterion_KKAN, epochs=5, scheduler=scheduler_KKAN)
 
 def count_parameters(model):
     return sum(p.numel() for p in model.parameters() if p.requires_grad)

@@ -20,12 +20,18 @@ class KKAN(nn.Module):
 
       self.conv1 = KAN_Convolutional_Layer(
          n_convs = 2,
-         kernel_size= (5, 5),
+         kernel_size= (3, 3),
          device = device,
       )
 
       self.conv2 = KAN_Convolutional_Layer(
-         n_convs = 4,
+         n_convs = 2,
+         kernel_size= (3, 3),
+         device = device
+      )
+
+      self.conv3 = KAN_Convolutional_Layer(
+         n_convs = 2,
          kernel_size= (3, 3),
          device = device
       )
@@ -38,14 +44,15 @@ class KKAN(nn.Module):
 
       self.kan1 = KANLinear(
          # 4900,
-         1568,
-         256
-      )
-
-      self.kan2 = KANLinear(
-         256,
+         # 1568,
+         288,
          2
       )
+
+      # self.kan2 = KANLinear(
+      #    256,
+      #    2
+      # )
 
    def forward(self, x):
       x = self.conv1(x)
@@ -54,10 +61,13 @@ class KKAN(nn.Module):
       x = self.conv2(x)
       x = self.pool1(x)
 
+      x = self.conv3(x)
+      x = self.pool1(x)
+
       x = self.flat(x)
 
       x = self.kan1(x) 
-      x = self.kan2(x)
+      # x = self.kan2(x)
 
       x = F.log_softmax(x, dim=1)
 
