@@ -19,3 +19,11 @@ Script for applying support vector machines for classifying images based on sele
 **3. Genetic Algorithm - GA.m**
 
 Implementation of the genetic algorithm for a three-dimensional classification task. Genetic algorithm classification is achieved by defining the classification plane polynomial coefficients as the genetic algorithm variables.
+
+**4. Kolmogorov-Arnold Networks - KAN.py**
+
+Implementation of Kolmogorov-Arnold Networks, as proposed in https://github.com/KindXiaoming/pykan, for classifying three-dimensional features. Installation requirements listed in requirements.txt. This script contains the full training and inference pipeline.
+
+**5. Convolutional Kolmogorov-Arnold Networks - KKAN.py & KKAN_classification.py**
+
+Implementation of Convolutional Kolmogorov-Arnold Networks, as proposed in https://github.com/AntonioTepsich/Convolutional-KANs, for image classification. Installation requirements listed in KKAN_requirements.txt. KKAN.py contains the Convolutional KAN model, while KKAN_classification.py contains the full training and inference pipeline for KKAN and a traditional Convolutional Neural Network model proposed in ConvNet.py.
