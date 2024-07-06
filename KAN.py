@@ -112,13 +112,18 @@ def train_acc():
 def test_acc():
     return torch.mean((torch.argmax(model(dataset['test_input']), dim=1) == dataset['test_label']).float())
 
-# start_time = time.time()
+# time_reps = 10
+# elapsed_time = np.zeros(time_reps)
+# for i in range(0, time_reps):
+#     start_time = time.time()
 
 results = model.train(dataset, opt="LBFGS", steps=25, metrics=(train_acc, test_acc), loss_fn=torch.nn.CrossEntropyLoss())
 
-# end_time = time.time()
-# elapsed_time = end_time - start_time
-# print(f"Training time: {elapsed_time} [s]")
+    # end_time = time.time()
+    # elapsed_time[i] = end_time - start_time
+    # print(f"Training time: {elapsed_time[i]} s")
+# average_time = np.sum(elapsed_time) / time_reps
+# print(f"Average training time: {average_time} s")
 
 print(results['train_acc'][-1])
 print(results['test_acc'][-1])
@@ -126,11 +131,35 @@ print(results['test_acc'][-1])
 # ------------------------------------------------------------------------------------------------------------------
 # Predictions on train and test sets and saving for MATLAB post-processing
 
+# time_reps = 10
+# elapsed_time = np.zeros(time_reps)
+# for i in range(0, time_reps):
+#     start_time = time.time()
+
 prediction_train = model(dataset['train_input']).detach().numpy()
+
+#     end_time = time.time()
+#     elapsed_time[i] = end_time - start_time
+#     print(f"Inference time (training set): {elapsed_time[i]} s")
+# average_time = np.sum(elapsed_time) / time_reps
+# print(f"Average inference time (training set): {average_time} s")
+
 prediction_train = np.argmax(prediction_train, axis=1)
 np.savetxt('prediction_train.csv', prediction_train, delimiter=',')
 
+# time_reps = 10
+# elapsed_time = np.zeros(time_reps)
+# for i in range(0, time_reps):
+#     start_time = time.time()
+
 prediction_test = model(dataset['test_input']).detach().numpy()
+
+    # end_time = time.time()
+    # elapsed_time[i] = end_time - start_time
+    # print(f"Inference time (test set): {elapsed_time[i]} s")
+# average_time = np.sum(elapsed_time) / time_reps
+# print(f"Average inference time (test set): {average_time} s")
+
 prediction_test = np.argmax(prediction_test, axis=1)
 np.savetxt('prediction_test.csv', prediction_test, delimiter=',')
 

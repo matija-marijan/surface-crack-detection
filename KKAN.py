@@ -3,8 +3,8 @@ import sys
 from torch import nn
 import torch.nn.functional as F
 
-from ConvKAN.kan_convolutional.KANConv import KAN_Convolutional_Layer
-from ConvKAN.kan_convolutional.KANLinear import KANLinear
+from kan_convolutional.KANConv import KAN_Convolutional_Layer
+from kan_convolutional.KANLinear import KANLinear
 
 # library_path = '/home/matijamarijan/projects/ConvKAN'
 # sys.path.append(library_path)

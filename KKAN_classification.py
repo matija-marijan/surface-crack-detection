@@ -1,4 +1,5 @@
 import os
+import time
 from PIL import Image
 from torch.utils.data import Dataset, DataLoader, random_split
 import torchvision.transforms as transforms
@@ -225,6 +226,11 @@ def train_and_test_models(model, device, train_loader, test_loader, optimizer, c
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+# time_reps = 10
+# elapsed_time = np.zeros(time_reps)
+# for i in range(0, time_reps):
+#     start_time = time.time()
+
 model_ConvNet = ConvNet()
 model_ConvNet.to(device)
 optimizer_ConvNet = optim.AdamW(model_ConvNet.parameters(), lr=1e-3, weight_decay=1e-4)
@@ -233,8 +239,19 @@ criterion_ConvNet = nn.CrossEntropyLoss()
 all_train_loss_ConvNet, all_test_loss_ConvNet, \
     all_test_accuracy_ConvNet, all_test_precision_ConvNet, \
     all_test_recall_ConvNet, all_test_f1_ConvNet = \
-    train_and_test_models(model_ConvNet, device, train_loader, test_loader,
-                           optimizer_ConvNet, criterion_ConvNet, epochs=5, scheduler=scheduler_ConvNet)
+        train_and_test_models(model_ConvNet, device, train_loader, test_loader, 
+                            optimizer_ConvNet, criterion_ConvNet, epochs=5, scheduler=scheduler_ConvNet)
+
+#     end_time = time.time()
+#     elapsed_time[i] = end_time - start_time
+#     print(f"Training time: {elapsed_time[i]} s")
+# average_time = np.sum(elapsed_time) / time_reps
+# print(f"Average ConvNet training time: {average_time} s")
+
+# time_reps = 10
+# elapsed_time = np.zeros(time_reps)
+# for i in range(0, time_reps):
+#     start_time = time.time()
 
 model_KKAN = KKAN(device = device)
 model_KKAN.to(device)
@@ -243,9 +260,15 @@ scheduler_KKAN = optim.lr_scheduler.ExponentialLR(optimizer_KKAN, gamma=0.8)
 criterion_KKAN = nn.CrossEntropyLoss()
 all_train_loss_KKAN, all_test_loss_KKAN, \
     all_test_accuracy_KKAN, all_test_precision_KKAN, \
-        all_test_recall_KKAN, all_test_f1_KKAN = \
-            train_and_test_models(model_KKAN, device, train_loader, test_loader, 
-                                  optimizer_KKAN, criterion_KKAN, epochs=5, scheduler=scheduler_KKAN)
+    all_test_recall_KKAN, all_test_f1_KKAN = \
+        train_and_test_models(model_KKAN, device, train_loader, test_loader, 
+                            optimizer_KKAN, criterion_KKAN, epochs=5, scheduler=scheduler_KKAN)
+
+#     end_time = time.time()
+#     elapsed_time[i] = end_time - start_time
+#     print(f"Training time: {elapsed_time[i]} s")
+# average_time = np.sum(elapsed_time) / time_reps
+# print(f"Average KKAN training time: {average_time} s")
 
 def count_parameters(model):
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
@@ -306,3 +329,29 @@ df = pd.DataFrame({
 
 df.to_csv('surface_cracks.csv', index=False)
 df_styled = df.style.apply(highlight_max, subset=df.columns[:], axis=0).format('{:.3f}')
+
+# Inference with timing -----------------------------------------------
+# models = {'ConvNet': model_ConvNet, 'KKAN': model_KKAN}
+# loader_idx = {'train': train_loader, 'test': test_loader}
+
+# for model_name, model in models.items():
+#     for loader_name, loader in loader_idx.items():
+
+#         with torch.no_grad():
+
+#             time_reps = 10
+#             elapsed_time = np.zeros(time_reps)
+#             for i in range(0, time_reps):
+#                 start_time = time.time() 
+
+#                 for data, target in loader:
+#                     data, target = data.to(device), target.to(device)
+                        
+#                     # Get the predicted classes for this batch
+#                     output = model(data)
+
+#                 end_time = time.time()
+#                 elapsed_time[i] = end_time - start_time
+#                 print(f"Inference time: {elapsed_time[i]} s")
+#             average_time = np.sum(elapsed_time) / time_reps
+#             print(f"Average inference time for model {model_name} on {loader_name} set: {average_time} s")
