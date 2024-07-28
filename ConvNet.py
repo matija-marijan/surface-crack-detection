@@ -9,10 +9,10 @@ class ConvNet(nn.Module):
     def __init__(self):
         super(ConvNet, self).__init__()
         self.conv1 = nn.Conv2d(1, 8, kernel_size=5, padding='same')
-        self.conv2 = nn.Conv2d(8, 8, kernel_size=5, padding='same')
+        # self.conv2 = nn.Conv2d(8, 8, kernel_size=5, padding='same')
 
         self.conv3 = nn.Conv2d(8, 16, kernel_size=3, padding='same')
-        self.conv4 = nn.Conv2d(16, 16, kernel_size=3, padding='same')
+        # self.conv4 = nn.Conv2d(16, 16, kernel_size=3, padding='same')
 
         self.maxpool = nn.MaxPool2d(kernel_size=2, stride=2)
 
