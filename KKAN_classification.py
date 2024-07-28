@@ -132,6 +132,7 @@ def test(model, device, test_loader, criterion):
         precision: the precision of the model on the test set
         recall: the recall of the model on the test set
         f1: the f1 score of the model on the test set
+        confusion_matrix: the confusion matrix of the model on the test set
     """
 
     model.eval()
@@ -162,6 +163,7 @@ def test(model, device, test_loader, criterion):
     precision = precision_score(all_targets, all_predictions, average='macro')
     recall = recall_score(all_targets, all_predictions, average='macro')
     f1 = f1_score(all_targets, all_predictions, average='macro')
+    confusion_matrix = pd.crosstab(np.array(all_targets), np.array(all_predictions), rownames=['Tacna klasa'], colnames=['Predikcija'])
 
     # Normalize test loss
     test_loss /= len(test_loader.dataset)
@@ -170,7 +172,7 @@ def test(model, device, test_loader, criterion):
     # print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%), Precision: {:.2f}, Recall: {:.2f}, F1 Score: {:.2f}\n'.format(
     #     test_loss, correct, len(test_loader.dataset), accuracy, precision, recall, f1))
 
-    return test_loss, accuracy, precision, recall, f1
+    return test_loss, accuracy, precision, recall, f1, confusion_matrix
 
 def train_and_test_models(model, device, train_loader, test_loader, optimizer, criterion, epochs, scheduler):
     """
@@ -201,6 +203,7 @@ def train_and_test_models(model, device, train_loader, test_loader, optimizer, c
     all_test_precision = []
     all_test_recall = []
     all_test_f1 = []
+    all_test_confusion = []
     
     for epoch in range(1, epochs + 1):
         # Train the model
@@ -208,12 +211,13 @@ def train_and_test_models(model, device, train_loader, test_loader, optimizer, c
         all_train_loss.append(train_loss)
         
         # Test the model
-        test_loss, test_accuracy, test_precision, test_recall, test_f1 = test(model, device, test_loader, criterion)
+        test_loss, test_accuracy, test_precision, test_recall, test_f1, test_confusion = test(model, device, test_loader, criterion)
         all_test_loss.append(test_loss)
         all_test_accuracy.append(test_accuracy)
         all_test_precision.append(test_precision)
         all_test_recall.append(test_recall)
         all_test_f1.append(test_f1)
+        all_test_confusion.append(test_confusion)
 
         print(f'End of Epoch {epoch}: Train Loss: {train_loss:.6f}, Test Loss: {test_loss:.4f}, Accuracy: {test_accuracy:.2%}')
         scheduler.step()
@@ -221,8 +225,9 @@ def train_and_test_models(model, device, train_loader, test_loader, optimizer, c
     model.all_test_precision = all_test_precision
     model.all_test_f1 = all_test_f1
     model.all_test_recall = all_test_recall
+    model.all_test_confusion = all_test_confusion
 
-    return all_train_loss, all_test_loss, all_test_accuracy, all_test_precision, all_test_recall, all_test_f1
+    return all_train_loss, all_test_loss, all_test_accuracy, all_test_precision, all_test_recall, all_test_f1, all_test_confusion
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -238,7 +243,7 @@ scheduler_ConvNet = optim.lr_scheduler.ExponentialLR(optimizer_ConvNet, gamma=0.
 criterion_ConvNet = nn.CrossEntropyLoss()
 all_train_loss_ConvNet, all_test_loss_ConvNet, \
     all_test_accuracy_ConvNet, all_test_precision_ConvNet, \
-    all_test_recall_ConvNet, all_test_f1_ConvNet = \
+    all_test_recall_ConvNet, all_test_f1_ConvNet, all_test_confusion_ConvNet = \
         train_and_test_models(model_ConvNet, device, train_loader, test_loader, 
                             optimizer_ConvNet, criterion_ConvNet, epochs=5, scheduler=scheduler_ConvNet)
 
@@ -260,7 +265,7 @@ scheduler_KKAN = optim.lr_scheduler.ExponentialLR(optimizer_KKAN, gamma=0.8)
 criterion_KKAN = nn.CrossEntropyLoss()
 all_train_loss_KKAN, all_test_loss_KKAN, \
     all_test_accuracy_KKAN, all_test_precision_KKAN, \
-    all_test_recall_KKAN, all_test_f1_KKAN = \
+    all_test_recall_KKAN, all_test_f1_KKAN, all_test_confusion_KKAN = \
         train_and_test_models(model_KKAN, device, train_loader, test_loader, 
                             optimizer_KKAN, criterion_KKAN, epochs=5, scheduler=scheduler_KKAN)
 
@@ -273,25 +278,22 @@ all_train_loss_KKAN, all_test_loss_KKAN, \
 def count_parameters(model):
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
-fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 5))  
+# Plot confusion matrices side by side
 
-ax1.plot(all_test_loss_ConvNet, label='Loss ConvNet', color='purple')
-ax1.plot(all_test_loss_KKAN, label='Loss KKAN', color='orange')
 
-ax1.set_title('Loss Test vs Epochs')
-ax1.set_xlabel('Epochs')
-ax1.set_ylabel('Loss')
-ax1.legend()
-ax1.grid(True)
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 5))
+import seaborn as sns
+# Plot confusion matrix for ConvNet
+sns.heatmap(all_test_confusion_ConvNet[-1], annot=True, fmt='d', cmap='Blues', ax=ax1)
+ax1.set_title('Confusion Matrix - ConvNet')
+ax1.set_xlabel('Predikcija')
+ax1.set_ylabel('Tacna klasa')
 
-ax2.scatter(count_parameters(model_ConvNet), max(all_test_accuracy_ConvNet), color='purple', label='ConvNet')
-ax2.scatter(count_parameters(model_KKAN), max(all_test_accuracy_KKAN), color='orange', label='KKAN')
-
-ax2.set_title('Number of Parameters vs Accuracy')
-ax2.set_xlabel('Number of Parameters')
-ax2.set_ylabel('Accuracy (%)')
-ax2.legend() 
-ax2.grid(True)
+# Plot confusion matrix for KKAN
+sns.heatmap(all_test_confusion_KKAN[-1], annot=True, fmt='d', cmap='Blues', ax=ax2)
+ax2.set_title('Confusion Matrix - KKAN')
+ax2.set_xlabel('Predikcija')
+ax2.set_ylabel('Tacna klasa')
 
 plt.tight_layout()
 plt.show()
@@ -306,6 +308,7 @@ precision = []
 recall = []
 f1s = []
 params_counts = []
+confs = []
 
 models = [model_ConvNet, model_KKAN]
 
@@ -317,6 +320,7 @@ for i, m in enumerate(models):
     precision.append(m.all_test_precision[index])
     recall.append(m.all_test_recall[index])
     f1s.append(m.all_test_f1[index])
+    confs.append(m.all_test_confusion[index])
 
 # DataFrame creation
 df = pd.DataFrame({
